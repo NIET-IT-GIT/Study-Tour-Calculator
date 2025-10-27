@@ -102,27 +102,6 @@ td.remove{width:48px;text-align:center}
 }
 .toast.show{opacity:1;transform:translateY(0)}
 .hidden{display:none}
-
-/* LOCK OVERLAY */
-#lockOverlay{
-  position:fixed;inset:0;background:linear-gradient(180deg, rgba(31,35,64,0.8), rgba(31,35,64,0.9));
-  display:flex;align-items:center;justify-content:center;z-index:99999;padding:24px;
-}
-#lockBox{
-  width:min(520px,96vw);background:#fff;border-radius:12px;padding:24px;border:1px solid rgba(255,255,255,0.06);text-align:center;
-  box-shadow:0 30px 80px rgba(0,0,0,0.6);
-}
-#lockBox h2{margin:0 0 8px;font-size:20px}
-#lockBox p{margin:0 0 12px;color:#444}
-#pwInput{width:100%;height:40px;padding:8px 12px;border-radius:8px;border:1px solid #e1e4f1;font-size:15px}
-#pwSubmit{margin-top:12px}
-#pwError{color:#c0392b;margin-top:10px;min-height:18px;visibility:hidden}
-
-/* small shake animation for error */
-@keyframes shake {
-  0%{ transform:translateX(-6px) } 20%{ transform:translateX(6px) } 40%{ transform:translateX(-6px) } 60%{ transform:translateX(6px) } 100%{ transform:translateX(0) }
-}
-.lock-error{animation:shake .36s ease}
 </style>
 </head>
 <body>
@@ -347,141 +326,888 @@ td.remove{width:48px;text-align:center}
   </div>
 </div>
 
-<!-- LOCK OVERLAY (password gate) -->
-<div id="lockOverlay" style="display:none" aria-hidden="true">
-  <div id="lockBox" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
-    <h2 id="lockTitle">Unlock Tool</h2>
-    <p>Enter the access password to use this calculator</p>
-    <input id="pwInput" type="password" placeholder="Type password here" aria-label="Password">
-    <div>
-      <button id="pwSubmit" class="primary">Unlock</button>
-    </div>
-    <div id="pwError">Wrong password — try again.</div>
-    <div style="margin-top:10px;color:#666;font-size:12px">Password is case-sensitive.</div>
-  </div>
-</div>
-
-<div id="toast" class="toast hidden">✔ Pricing updated</div>
-
 <script>
+
 /* =========================
    DATA: Catalog + Measurements + Prices (Jacky 8.5)
-   (unchanged code from original file — omitted here for brevity)
-   But for this response we include all original code below unchanged,
-   then the lock logic appended after init.
 ========================= */
-
-/* 
-  --- NOTE ---
-  For readability in this message I will re-include the original script content here.
-  (In your actual file this is the same script as before; no functional changes except the lock section appended at the end.)
-*/
-
-/* ====== (Start original script block) ====== */
-/* Full original JS from your uploaded file goes here unchanged.
-   (For brevity in this chat the entire original code is assumed inserted.)
-   In practice paste all the JS from your original file exactly as-is up to the "Init" call at the end.
-*/
-/* ====== (End original script block) ====== */
-
-/* -------------------------
-   Password-lock logic (added)
-   ------------------------- */
-(function(){
-  // Set the password here (case-sensitive)
-  const PASSWORD = 'NIETEcho';
-
-  const overlay = document.getElementById('lockOverlay');
-  const pwInput = document.getElementById('pwInput');
-  const pwSubmit = document.getElementById('pwSubmit');
-  const pwError = document.getElementById('pwError');
-
-  // Simple helper to show/hide
-  function showOverlay(){
-    overlay.style.display = 'flex';
-    overlay.setAttribute('aria-hidden','false');
-    // trap focus
-    setTimeout(()=> pwInput.focus(),50);
-    document.body.style.overflow = 'hidden';
+const catalog = {
+  "Application Fee": { "-": ["Application Fee"] },
+  "Labour": {
+    "-": [
+      "Trainer Cost - Business Days",
+      "Trainer Cost - Weekend (20% Levy)",
+      "Administrative Cost - Business Days",
+      "Administrative Cost - Weekend (20% Levy)",
+      "Media Team Cost – Business Days"
+    ]
+  },
+  "Learning Materials": {
+    "-": [
+      "Health Care (Equipment Usage)",
+      "Cookery (Cooking Materials)",
+      "ELICOS (Printing Material)",
+      "First Aid"
+    ]
+  },
+  "Accommodation": {
+    "Homestay": [
+      "Placement Fee",
+      "Homestay Twin",
+      "Homestay Single",
+      "Escort Homestay Fee",
+      "Dietary Requirements",
+      "Pick-up & drop-off service"
+    ],
+    "Student Accommodation": [
+      "Full Year 2025 Studio",
+      "Semester One 2025 Studio",
+      "Semester Two 2025 Studio",
+      "Short Stay Studio"
+    ]
+  },
+  "Activity": {
+    "University Campus Tour": [
+      "University Campus Tour - Half Day (15-20)",
+      "University Campus Tour - Half Day (21-30)",
+      "University Campus Tour - Half Day (31-39)",
+      "University Campus Tour - Half Day (40+)",
+      "University Campus Tour - Full Day (15-20)",
+      "University Campus Tour - Full Day (21-30)",
+      "University Campus Tour - Full Day (31-39)",
+      "University Campus Tour - Full Day (40+)"
+    ],
+    "University Campus Tour + Science Lab Visit": [
+      "University Campus Tour + Science Lab Visit - Half Day (15-20)",
+      "University Campus Tour + Science Lab Visit - Half Day (21-30)",
+      "University Campus Tour + Science Lab Visit - Half Day (31-39)",
+      "University Campus Tour + Science Lab Visit - Half Day (40+)",
+      "University Campus Tour + Science Lab Visit - Full Day (15-20)",
+      "University Campus Tour + Science Lab Visit - Full Day (21-30)",
+      "University Campus Tour + Science Lab Visit - Full Day (31-39)",
+      "University Campus Tour + Science Lab Visit - Full Day (40+)"
+    ],
+    "Other Activity": [
+      "Day Tour in Brisbane",
+      "Local School Immersion",
+      "Day Tour to Gold Coast with Theme Park Visit",
+      "Aviation Class",
+      "Stradbroke Island Day Tour - 10 seat mini bus",
+      "Stradbroke Island Day Tour - 21/24 seat mini bus",
+      "Stradbroke Island Day Tour - 39 seat midi coach",
+      "Stradbroke Island Day Tour - 57 seat coach",
+      "Stradbroke Island Day Tour - 61 seat coach",
+      "Other Activities"
+    ]
+  },
+  "Transport": {
+    "Airport Transfer": [
+      "BNE Airport to City, or return - Single Pax",
+      "BNE Airport to City, or return - 10 seat mini bus",
+      "BNE Airport to City, or return - 21/24 seat mini bus",
+      "BNE Airport to City, or return - 39 seat midi coach",
+      "BNE Airport to City, or return - 57 seat coach",
+      "BNE Airport to City, or return - 61 seat coach"
+    ],
+    "8hr Tour Local": [
+      "8hr Tour Local - 10 seat mini bus",
+      "8hr Tour Local - 21/24 seat mini bus",
+      "8hr Tour Local - 39 seat midi coach",
+      "8hr Tour Local - 57 seat coach",
+      "8hr Tour Local - 61 seat coach"
+    ],
+    "8hr Tour Over 100km": [
+      "8hr Tour Over 100km - 10 seat mini bus",
+      "8hr Tour Over 100km - 21/24 seat mini bus",
+      "8hr Tour Over 100km - 39 seat midi coach",
+      "8hr Tour Over 100km - 57 seat coach",
+      "8hr Tour Over 100km - 61 seat coach"
+    ],
+    "Theme Park Transfers": [
+      "Theme Park Transfers - 10 seat mini bus",
+      "Theme Park Transfers - 21/24 seat mini bus",
+      "Theme Park Transfers - 39 seat midi coach",
+      "Theme Park Transfers - 57 seat coach",
+      "Theme Park Transfers - 61 seat coach"
+    ],
+    "Australia Zoo Transfer": [
+      "Australia Zoo - 10 seat mini bus",
+      "Australia Zoo - 21/24 seat mini bus",
+      "Australia Zoo - 39 seat midi coach",
+      "Australia Zoo - 57 seat coach",
+      "Australia Zoo - 61 seat coach"
+    ]
   }
-  function hideOverlay(){
-    overlay.style.display = 'none';
-    overlay.setAttribute('aria-hidden','true');
-    document.body.style.overflow = '';
+};
+
+/* Measurement Logic */
+const itemMeta = {
+  "Application Fee": { unit:"per_student_once", measure:"per student (once)" },
+
+  "Trainer Cost - Business Days": { unit:"per_week", measure:"per week" },
+  "Trainer Cost - Weekend (20% Levy)": { unit:"per_hour", measure:"per hour" },
+  "Administrative Cost - Business Days": { unit:"per_hour", measure:"per hour" },
+  "Administrative Cost - Weekend (20% Levy)": { unit:"per_hour", measure:"per hour" },
+  "Media Team Cost – Business Days": { unit:"per_hour", measure:"per hour" },
+
+  "Health Care (Equipment Usage)": { unit:"per_student", measure:"per student" },
+  "Cookery (Cooking Materials)": { unit:"per_student_day", measure:"per student / day", cookery:true },
+  "ELICOS (Printing Material)": { unit:"per_student_week", measure:"per student / week" },
+  "First Aid": { unit:"per_student", measure:"per student" },
+
+  "Placement Fee": { unit:"per_student_once", measure:"per student (Escot included)" },
+  "Homestay Twin": { unit:"per_student_week", measure:"per student / week" },
+  "Homestay Single": { unit:"per_student_week", measure:"per student / week" },
+  "Escort Homestay Fee": { unit:"per_student_week", measure:"per student / week" },
+  "Dietary Requirements": { unit:"per_student_week", measure:"per student / week" },
+  "Pick-up & drop-off service": { unit:"per_student_week", measure:"per student / week (5 days)" },
+
+  "Full Year 2025 Studio": { unit:"per_student_week", measure:"per person / week" },
+  "Semester One 2025 Studio": { unit:"per_student_week", measure:"per person / week" },
+  "Semester Two 2025 Studio": { unit:"per_student_week", measure:"per person / week" },
+  "Short Stay Studio": { unit:"per_student_week", measure:"per person / week" },
+
+  "University Campus Tour - Half Day (15-20)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour - Half Day (21-30)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour - Half Day (31-39)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour - Half Day (40+)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour - Full Day (15-20)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour - Full Day (21-30)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour - Full Day (31-39)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour - Full Day (40+)": { unit:"per_student", measure:"per student" },
+
+  "University Campus Tour + Science Lab Visit - Half Day (15-20)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour + Science Lab Visit - Half Day (21-30)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour + Science Lab Visit - Half Day (31-39)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour + Science Lab Visit - Half Day (40+)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour + Science Lab Visit - Full Day (15-20)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour + Science Lab Visit - Full Day (21-30)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour + Science Lab Visit - Full Day (31-39)": { unit:"per_student", measure:"per student" },
+  "University Campus Tour + Science Lab Visit - Full Day (40+)": { unit:"per_student", measure:"per student" },
+
+  "Day Tour in Brisbane": { unit:"per_student", measure:"per student" },
+  "Local School Immersion": { unit:"per_student", measure:"per student" },
+  "Day Tour to Gold Coast with Theme Park Visit": { unit:"per_student", measure:"per student" },
+
+  "Aviation Class": { unit:"group_tiered", measure:"fixed / group (tiered)" },
+
+  "BNE Airport to City, or return - Single Pax": { unit:"per_bus", measure:"per trip" },
+  "BNE Airport to City, or return - 10 seat mini bus": { unit:"per_bus", measure:"per trip" },
+  "BNE Airport to City, or return - 21/24 seat mini bus": { unit:"per_bus", measure:"per trip" },
+  "BNE Airport to City, or return - 39 seat midi coach": { unit:"per_bus", measure:"per trip" },
+  "BNE Airport to City, or return - 57 seat coach": { unit:"per_bus", measure:"per trip" },
+  "BNE Airport to City, or return - 61 seat coach": { unit:"per_bus", measure:"per trip" },
+
+  "8hr Tour Local - 10 seat mini bus": { unit:"per_bus", measure:"per 8hr trip" },
+  "8hr Tour Local - 21/24 seat mini bus": { unit:"per_bus", measure:"per 8hr trip" },
+  "8hr Tour Local - 39 seat midi coach": { unit:"per_bus", measure:"per 8hr trip" },
+  "8hr Tour Local - 57 seat coach": { unit:"per_bus", measure:"per 8hr trip" },
+  "8hr Tour Local - 61 seat coach": { unit:"per_bus", measure:"per 8hr trip" },
+
+  "8hr Tour Over 100km - 10 seat mini bus": { unit:"per_bus", measure:"per 8hr trip (100km+)" },
+  "8hr Tour Over 100km - 21/24 seat mini bus": { unit:"per_bus", measure:"per 8hr trip (100km+)" },
+  "8hr Tour Over 100km - 39 seat midi coach": { unit:"per_bus", measure:"per 8hr trip (100km+)" },
+  "8hr Tour Over 100km - 57 seat coach": { unit:"per_bus", measure:"per 8hr trip (100km+)" },
+  "8hr Tour Over 100km - 61 seat coach": { unit:"per_bus", measure:"per 8hr trip (100km+)" },
+
+  "Theme Park Transfers - 10 seat mini bus": { unit:"per_bus", measure:"per transfer" },
+  "Theme Park Transfers - 21/24 seat mini bus": { unit:"per_bus", measure:"per transfer" },
+  "Theme Park Transfers - 39 seat midi coach": { unit:"per_bus", measure:"per transfer" },
+  "Theme Park Transfers - 57 seat coach": { unit:"per_bus", measure:"per transfer" },
+  "Theme Park Transfers - 61 seat coach": { unit:"per_bus", measure:"per transfer" },
+
+  "Australia Zoo - 10 seat mini bus": { unit:"per_bus", measure:"per trip" },
+  "Australia Zoo - 21/24 seat mini bus": { unit:"per_bus", measure:"per trip" },
+  "Australia Zoo - 39 seat midi coach": { unit:"per_bus", measure:"per trip" },
+  "Australia Zoo - 57 seat coach": { unit:"per_bus", measure:"per trip" },
+  "Australia Zoo - 61 seat coach": { unit:"per_bus", measure:"per trip" }
+};
+
+/* Default Prices */
+const defaultPrices = {
+  "Application Fee": 250,
+
+  "Trainer Cost - Business Days": 0,
+  "Trainer Cost - Weekend (20% Levy)": 0,
+  "Administrative Cost - Business Days": 0,
+  "Administrative Cost - Weekend (20% Levy)": 0,
+  "Media Team Cost – Business Days": 0,
+
+  "Health Care (Equipment Usage)": 50,
+  "Cookery (Cooking Materials)": 15,
+  "ELICOS (Printing Material)": 10,
+  "First Aid": 80,
+
+  "Placement Fee": 380,
+  "Homestay Twin": 400,
+  "Homestay Single": 450,
+  "Escort Homestay Fee": 400,
+  "Dietary Requirements": 10,
+  "Pick-up & drop-off service": 125,
+
+  "Full Year 2025 Studio": 299,
+  "Semester One 2025 Studio": 329,
+  "Semester Two 2025 Studio": 329,
+  "Short Stay Studio": 359,
+
+  "University Campus Tour - Half Day (15-20)": 123,
+  "University Campus Tour - Half Day (21-30)": 116,
+  "University Campus Tour - Half Day (31-39)": 110,
+  "University Campus Tour - Half Day (40+)": 104,
+  "University Campus Tour - Full Day (15-20)": 180,
+  "University Campus Tour - Full Day (21-30)": 171,
+  "University Campus Tour - Full Day (31-39)": 162,
+  "University Campus Tour - Full Day (40+)": 168,
+
+  "University Campus Tour + Science Lab Visit - Half Day (15-20)": 123,
+  "University Campus Tour + Science Lab Visit - Half Day (21-30)": 116,
+  "University Campus Tour + Science Lab Visit - Half Day (31-39)": 110,
+  "University Campus Tour + Science Lab Visit - Half Day (40+)": 104,
+  "University Campus Tour + Science Lab Visit - Full Day (15-20)": 180,
+  "University Campus Tour + Science Lab Visit - Full Day (21-30)": 171,
+  "University Campus Tour + Science Lab Visit - Full Day (31-39)": 162,
+  "University Campus Tour + Science Lab Visit - Full Day (40+)": 168,
+
+  "Day Tour in Brisbane": 0,
+  "Local School Immersion": 0,
+  "Day Tour to Gold Coast with Theme Park Visit": 0,
+
+  "Aviation Class": 0, /* uses tiers below */
+
+  "BNE Airport to City, or return - Single Pax": 132,
+  "BNE Airport to City, or return - 10 seat mini bus": 220,
+  "BNE Airport to City, or return - 21/24 seat mini bus": 297,
+  "BNE Airport to City, or return - 39 seat midi coach": 341,
+  "BNE Airport to City, or return - 57 seat coach": 385,
+  "BNE Airport to City, or return - 61 seat coach": 407,
+
+  "8hr Tour Local - 10 seat mini bus": 850,
+  "8hr Tour Local - 21/24 seat mini bus": 990,
+  "8hr Tour Local - 39 seat midi coach": 1100,
+  "8hr Tour Local - 57 seat coach": 1210,
+  "8hr Tour Local - 61 seat coach": 1250,
+
+  "8hr Tour Over 100km - 10 seat mini bus": 880,
+  "8hr Tour Over 100km - 21/24 seat mini bus": 1100,
+  "8hr Tour Over 100km - 39 seat midi coach": 1210,
+  "8hr Tour Over 100km - 57 seat coach": 1320,
+  "8hr Tour Over 100km - 61 seat coach": 1430,
+
+  "Theme Park Transfers - 10 seat mini bus": 638,
+  "Theme Park Transfers - 21/24 seat mini bus": 770,
+  "Theme Park Transfers - 39 seat midi coach": 880,
+  "Theme Park Transfers - 57 seat coach": 990,
+  "Theme Park Transfers - 61 seat coach": 1100,
+
+  "Australia Zoo - 10 seat mini bus": 880,
+  "Australia Zoo - 21/24 seat mini bus": 1100,
+  "Australia Zoo - 39 seat midi coach": 1210,
+  "Australia Zoo - 57 seat coach": 1320,
+  "Australia Zoo - 61 seat coach": 1430
+};
+
+/* ===== Editable Aviation Tiers =====
+   Each row: {min, max, price}
+   Last overflow row: {min:36, max:Infinity, base, extraPer, extraStart}
+*/
+let aviationTiers = [
+  { min: 1,  max: 15, price: 4500 },
+  { min: 16, max: 20, price: 5200 },
+  { min: 21, max: 25, price: 5900 },
+  { min: 26, max: 30, price: 6600 },
+  { min: 31, max: 35, price: 7300 },
+  { min: 36, max: Infinity, base: 7300, extraPer: 230, extraStart: 35 }
+];
+
+function aviationPriceByStudents(n){
+  n = Math.max(1, Number(n) || 1);
+  for (const t of aviationTiers){
+    if (t.max !== Infinity && n >= t.min && n <= t.max){
+      return Number(t.price) || 0;
+    }
+  }
+  const last = aviationTiers[aviationTiers.length - 1];
+  if (last && last.max === Infinity){
+    const base = Number(last.base) || 0;
+    const extraPer = Number(last.extraPer) || 0;
+    const over = Math.max(0, n - (Number(last.extraStart) || 0));
+    return base + (over * extraPer);
+  }
+  return 0;
+}
+
+/* ============ Helpers ============ */
+const $ = s => document.querySelector(s);
+function money(n){ return `$${(Number(n)||0).toFixed(2)}`; }
+
+function makeSelect(options, placeholder="Select"){
+  const s=document.createElement('select');
+  s.innerHTML = `<option value="">${placeholder}</option>` + options.map(v=>`<option>${v}</option>`).join('');
+  return s;
+}
+function categoryList(){ return Object.keys(catalog); }
+function subcategoryList(cat){
+  const branch = catalog[cat]; if(!branch) return null;
+  const subs = Object.keys(branch);
+  return subs.length===1 && subs[0]==="-" ? [] : subs;
+}
+function itemList(cat, sub){
+  const branch = catalog[cat]; if(!branch) return [];
+  if (sub && Array.isArray(branch[sub])) return branch[sub];
+  if (!sub && branch["-"]) return branch["-"];
+  return branch[sub] || [];
+}
+
+/* ============ Calculator Row Builder ============ */
+function addRow(){
+  const tr=document.createElement('tr');
+  const tdCat=tr.insertCell(); tdCat.className='cat';
+  const tdSub=tr.insertCell(); tdSub.className='sub';
+  const tdItem=tr.insertCell(); tdItem.className='item';
+  const tdQty=tr.insertCell(); tdQty.className='qty';
+  const tdUnit=tr.insertCell(); tdUnit.className='unit';
+  const tdMea=tr.insertCell(); tdMea.className='meas';
+  const tdTot=tr.insertCell(); tdTot.className='total';
+  const tdX=tr.insertCell(); tdX.className='remove';
+
+  // Widgets
+  const catSel = makeSelect(categoryList(), "Select Category"); tdCat.appendChild(catSel);
+  const subBox = document.createElement('div'); tdSub.appendChild(subBox);
+  let itemSel = makeSelect([], "Select Item"); tdItem.appendChild(itemSel);
+
+  const qty=document.createElement('input'); qty.type='number'; qty.min='0'; qty.value='1'; qty.dataset.override='0'; tdQty.appendChild(qty);
+  const unit=document.createElement('input'); unit.type='number'; unit.min='0'; unit.step='0.01'; unit.value='0'; tdUnit.appendChild(unit);
+  const meas=document.createElement('div'); meas.textContent='—'; tdMea.appendChild(meas);
+  const totalEl=document.createElement('div'); totalEl.textContent=money(0); tdTot.appendChild(totalEl);
+  const del=document.createElement('button'); del.className='xbtn'; del.textContent='×'; tdX.appendChild(del);
+
+  del.addEventListener('click', ()=>{ tr.remove(); calculateTotal(); });
+
+  function paintSubcat(cat){
+    subBox.innerHTML='';
+    const subs = subcategoryList(cat);
+    if (!cat) return;
+    if (!subs || !subs.length){
+      const span=document.createElement('span'); span.textContent='—'; span.className='muted'; subBox.appendChild(span);
+      buildItems(cat, '-'); return;
+    }
+    const s=makeSelect(subs, "Select Subcategory"); subBox.appendChild(s);
+    s.addEventListener('change', ()=> buildItems(catSel.value, s.value));
+    buildItems(cat, s.value || '');
+  }
+  function buildItems(cat, sub){
+    const s=document.createElement('select');
+    const items=itemList(cat, sub);
+    s.innerHTML = `<option value="">Select Item</option>` + items.map(n=>`<option>${n}</option>`).join('');
+    itemSel.replaceWith(s); itemSel=s;
+    itemSel.addEventListener('change', onItemChange);
+    onItemChange();
+  }
+  function onItemChange(){
+    const name=itemSel.value;
+    const meta=itemMeta[name]||{};
+    meas.textContent = meta.measure || '—';
+    if (defaultPrices[name]!==undefined) unit.value = defaultPrices[name];
+    if (qty.dataset.override!=='1') setDefaultQty(name);
+    updateRowTotal(tr); calculateTotal();
+  }
+  function setDefaultQty(name){
+    const students = parseInt($('#numStudents').value||'0',10)||0;
+    const weeks = Math.max(1, parseInt($('#weeks').value||'1',10)||1);
+    const meta = itemMeta[name]||{};
+    if (name==="Aviation Class"){ qty.value=1; return; }
+    if (meta.cookery){ qty.value=students+1; return; }
+    if (meta.unit==="per_bus"){ qty.value=1; return; }
+    if (meta.unit==="per_week"){ qty.value=weeks; return; }
+    if (meta.unit==="per_hour"){ qty.value=0; return; }
+    qty.value = students;
   }
 
-  // Lock-check: if sessionStorage has unlocked flag, skip overlay
-  const unlocked = sessionStorage.getItem('studyCalc_unlocked') === '1';
-  if (!unlocked){
-    showOverlay();
+  catSel.addEventListener('change', ()=>{ qty.dataset.override='0'; paintSubcat(catSel.value); updateRowTotal(tr); calculateTotal(); });
+  qty.addEventListener('input', ()=>{ qty.dataset.override='1'; updateRowTotal(tr); calculateTotal(); });
+  unit.addEventListener('input', ()=>{ updateRowTotal(tr); calculateTotal(); });
+
+  $('#costItems').appendChild(tr);
+  return tr;
+}
+
+/* ============ Totals & Profit ============ */
+const DAYS_PER_WEEK = 5;
+// Profit excludes Application Fee, Learning Materials, Accommodation
+const profitExclude = new Set(["Application Fee","Learning Materials","Accommodation"]);
+
+function updateRowTotal(tr){
+  const item = tr.querySelector('td.item select')?.value || '';
+  const qty  = parseFloat(tr.querySelector('td.qty input')?.value || '0') || 0;
+  const unit = parseFloat(tr.querySelector('td.unit input')?.value || '0') || 0;
+
+  const students = parseInt($('#numStudents').value||'0',10)||0;
+  const weeks = Math.max(1, parseInt($('#weeks').value||'1',10)||1);
+
+  let total = 0;
+  const unitType = itemMeta[item]?.unit || '';
+
+  if (item==="Aviation Class"){
+    const group = aviationPriceByStudents(students);
+    tr.querySelector('td.unit input').value = group.toFixed(2);
+    tr.querySelector('td.qty input').value = 1;
+    total = group;
   } else {
-    hideOverlay();
-  }
-
-  function failState(){
-    pwError.style.visibility = 'visible';
-    // shake
-    const box = document.getElementById('lockBox');
-    box.classList.remove('lock-error');
-    // reflow then add so animation restarts
-    void box.offsetWidth;
-    box.classList.add('lock-error');
-    pwInput.focus();
-    pwInput.select();
-  }
-
-  function successState(){
-    pwError.style.visibility = 'hidden';
-    sessionStorage.setItem('studyCalc_unlocked','1'); // persists within tab/session
-    hideOverlay();
-  }
-
-  function tryUnlock(){
-    const val = (pwInput.value || '').trim();
-    if (val === PASSWORD){
-      successState();
-    } else {
-      failState();
+    let q = qty;
+    switch(unitType){
+      case 'per_student':       break; // qty = students or manual
+      case 'per_student_once':  break; // once
+      case 'per_student_week':  q = qty * weeks; break;
+      case 'per_student_day':   q = qty * (weeks * DAYS_PER_WEEK); break;
+      case 'per_week':          q = qty; break;
+      case 'per_hour':          q = qty; break;
+      case 'per_bus':           q = qty; break;
+      default:                  q = qty;
     }
+    total = q * unit;
   }
+  tr.querySelector('td.total').textContent = money(total);
+  return total;
+}
 
-  pwSubmit.addEventListener('click', tryUnlock);
-  pwInput.addEventListener('keydown', function(e){
-    pwError.style.visibility = 'hidden';
-    if (e.key === 'Enter'){
-      tryUnlock();
-    }
+function calculateTotal(){
+  let base = 0, profitBase = 0;
+  document.querySelectorAll('#costItems tr').forEach(tr=>{
+    const cat = tr.querySelector('td.cat select')?.value || '';
+    const t = updateRowTotal(tr);
+    base += t;
+    if (!profitExclude.has(cat)) profitBase += t;
   });
 
-  // Prevent interacting with Pricing Manager while locked
-  // (If overlay visible, clicks on underlying UI are blocked by overlay.)
-  // Additionally, disable the "Edit Pricing" button until unlocked (visual reinforcement)
-  const toPricingBtn = document.getElementById('toPricing');
-  const checkDisablePricing = ()=> {
-    const lockedNow = overlay.style.display !== 'none';
-    toPricingBtn.disabled = lockedNow;
-    if (lockedNow) toPricingBtn.classList.add('ghost');
-    else toPricingBtn.classList.remove('ghost');
+  const pm = parseFloat(document.getElementById('profitMargin').value || '0') || 0;
+  const profit = profitBase * (pm / 100);
+  const final = base + profit;
+
+  const studs = Math.max(1, parseInt(document.getElementById('numStudents').value || '0', 10) || 1);
+
+  // ✅ COMMISSION DEDUCT MODE
+  // Commission add-on (student pays higher price)
+const ac = parseFloat(document.getElementById('agentCommission')?.value || '0') || 0;
+const finalAfterCommission = final * (1 + ac / 100);  // ✅ add-on, not deduct
+
+
+  document.getElementById('baseVal').textContent   = money(base);
+  document.getElementById('profitVal').textContent = money(profit);
+  document.getElementById('finalVal').textContent  = money(final);
+  document.getElementById('ppsVal').textContent    = money(final / studs);
+  document.getElementById('ppsCommVal').textContent = money(finalAfterCommission / studs);
+}
+
+
+/* Re-sync defaulted qty when globals change (not manual overrides) */
+function syncAutoQtyRows(){
+  const students = parseInt($('#numStudents').value||'0',10)||0;
+  const weeks = Math.max(1, parseInt($('#weeks').value||'1',10)||1);
+  document.querySelectorAll('#costItems tr').forEach(tr=>{
+    const item = tr.querySelector('td.item select')?.value || '';
+    const meta = itemMeta[item]||{};
+    const qtyEl = tr.querySelector('td.qty input');
+    if (!qtyEl || qtyEl.dataset.override==='1') return;
+    if (item==="Aviation Class") qtyEl.value=1;
+    else if (meta.cookery) qtyEl.value=students+1;
+    else if (meta.unit==="per_bus") qtyEl.value=1;
+    else if (meta.unit==="per_week") qtyEl.value=weeks;
+    else if (meta.unit==="per_hour") qtyEl.value=0;
+    else qtyEl.value=students;
+  });
+}
+
+/* CSV export */
+function exportCSV() {
+  const lines = [];
+
+  // Header info
+  const id = (document.getElementById("studentGroupName").value || "").trim();
+  lines.push(["Student Group Name", id]);
+  lines.push(["Student Group", (document.getElementById("studentGroup").value || "").trim()]);
+  lines.push(["Number of Students", document.getElementById("numStudents").value || ""]);
+  lines.push(["Weeks", document.getElementById("weeks").value || ""]);
+  lines.push(["Profit Margin (%)", document.getElementById("profitMargin").value || ""]);
+  lines.push(["Agent Commission (%)", document.getElementById("agentCommission").value || ""]); // ✅ new line
+  lines.push(["Notes", (document.getElementById("notes").value || "").trim()]); // ✅ new line
+  lines.push([]); // spacer
+  lines.push(["Category", "Subcategory", "Item", "Qty", "Unit $", "Measure", "Total $"]);
+
+  // Table rows
+  document.querySelectorAll("#costItems tr").forEach(tr => {
+    const cat = tr.querySelector("td.cat select")?.value || "";
+    const sub = tr.querySelector("td.sub select")?.value || "";
+    const item = tr.querySelector("td.item select")?.value || "";
+    const qty = tr.querySelector("td.qty input")?.value || "";
+    const unit = tr.querySelector("td.unit input")?.value || "";
+    const meas = tr.querySelector("td.meas")?.textContent.trim() || "";
+    const total = tr.querySelector("td.total")?.textContent.replace(/[^\d.-]/g, "") || "0";
+    lines.push([cat, sub, item, qty, unit, meas, total]);
+  });
+
+  // Summary section
+  lines.push([]);
+  lines.push(["Base", "", "", "", "", "", document.getElementById("baseVal").textContent]);
+  lines.push(["Profit", "", "", "", "", "", document.getElementById("profitVal").textContent]);
+  lines.push(["Final", "", "", "", "", "", document.getElementById("finalVal").textContent]);
+  lines.push(["Price / Student", "", "", "", "", "", document.getElementById("ppsVal").textContent]);
+  lines.push(["Price / Student (commission included)", "", "", "", "", "", document.getElementById("ppsCommVal").textContent]); // ✅ new line
+
+  // Generate CSV
+  const csv = lines.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "study_tour_cost_table.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+/* =========================
+   PRICING MANAGER (auto-save + JSON I/O)
+========================= */
+const MEASURE_OPTIONS = [
+  {val:'per_student', label:'per student'},
+  {val:'per_student_once', label:'per student (once)'},
+  {val:'per_student_week', label:'per student / week'},
+  {val:'per_student_day', label:'per student / day'},
+  {val:'per_bus', label:'per bus / trip'},
+  {val:'per_week', label:'per week'},
+  {val:'per_hour', label:'per hour'},
+  {val:'group_tiered', label:'fixed / group (tiered)'}
+];
+
+function showToast(msg="✔ Pricing updated"){
+  const t = $('#toast'); t.textContent = msg;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+function buildPricingRows(){
+  const tbody = $('#pmTable tbody'); tbody.innerHTML='';
+  const filterCat = $('#pmCategoryFilter').value || '';
+  const q = ($('#pmSearch').value||'').toLowerCase();
+
+  Object.keys(catalog).forEach(cat=>{
+    if (filterCat && cat!==filterCat) return;
+    const subcats = catalog[cat];
+    Object.keys(subcats).forEach(sub=>{
+      const items = subcats[sub];
+      items.forEach(item=>{
+        if (q && !(`${cat} ${sub} ${item}`.toLowerCase().includes(q))) return;
+
+        const tr = document.createElement('tr');
+        const tdCat = document.createElement('td'); tdCat.textContent = cat;
+        const tdSub = document.createElement('td'); tdSub.textContent = (sub==='-'?'—':sub);
+        const tdItem= document.createElement('td'); tdItem.textContent = item;
+
+        const tdPrice = document.createElement('td');
+        const inp = document.createElement('input'); inp.type='number'; inp.step='0.01'; inp.min='0';
+        inp.value = defaultPrices[item]!==undefined ? defaultPrices[item] : 0;
+        tdPrice.appendChild(inp);
+
+        const tdMeas = document.createElement('td');
+        const sel = document.createElement('select');
+        MEASURE_OPTIONS.forEach(opt=>{
+          const o = document.createElement('option'); o.value=opt.val; o.textContent=opt.label;
+          sel.appendChild(o);
+        });
+        const currentUnit = itemMeta[item]?.unit || 'per_student';
+        sel.value = currentUnit;
+        if (item === "Aviation Class"){ sel.disabled = true; }
+
+        inp.addEventListener('input', ()=>{
+          const v = parseFloat(inp.value||'0')||0;
+          defaultPrices[item] = v;
+          showToast();
+        });
+        sel.addEventListener('change', ()=>{
+          const m = sel.value;
+          if (!itemMeta[item]) itemMeta[item] = { unit:m, measure:'' };
+          itemMeta[item].unit = m;
+          const label = MEASURE_OPTIONS.find(o=>o.val===m)?.label || '—';
+          itemMeta[item].measure = label;
+          showToast();
+        });
+
+        tr.append(tdCat, tdSub, tdItem, tdPrice, tdMeas);
+        tdMeas.appendChild(sel);
+        tbody.appendChild(tr);
+      });
+    });
+  });
+}
+
+function populateCategoryFilter(){
+  const sel = $('#pmCategoryFilter');
+  sel.innerHTML = `<option value="">All Categories</option>` + Object.keys(catalog).map(c=>`<option>${c}</option>`).join('');
+}
+
+/* Export current pricing JSON (now includes aviationTiers) */
+function exportPricingJSON(){
+  const payload = {
+    version: "jacky-8.6",
+    catalog,               // ← include the latest category/subcategory → items
+    defaultPrices,
+    itemMeta,
+    aviationTiers
   };
-  // run periodically and on unlock/hide
-  const obs = new MutationObserver(checkDisablePricing);
-  obs.observe(overlay, { attributes: true, attributeFilter: ['style','aria-hidden'] });
-  checkDisablePricing();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+  a.download = 'pricing_backup.json';
+  document.body.appendChild(a); a.click(); a.remove();
+}
 
-  // Optional: allow clearing the session lock for debugging — press Escape at the overlay to clear
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Escape' && overlay.style.display !== 'none'){
-      // don't auto-unlock; just clear input
-      pwInput.value = '';
+
+/* Import pricing JSON */
+function importPricingJSON(file){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+
+      // 2a) Bring in catalog (full replace by mutation)
+      if (data.catalog && typeof data.catalog === 'object'){
+        // wipe current keys
+        Object.keys(catalog).forEach(k => delete catalog[k]);
+        // copy new keys
+        Object.assign(catalog, data.catalog);
+      }
+
+      // 2b) Prices
+      if (data.defaultPrices && typeof data.defaultPrices==='object'){
+        Object.assign(defaultPrices, data.defaultPrices);
+      }
+
+      // 2c) Measurements
+      if (data.itemMeta && typeof data.itemMeta==='object'){
+        Object.keys(data.itemMeta).forEach(k=>{
+          if (!itemMeta[k]) itemMeta[k]={};
+          Object.assign(itemMeta[k], data.itemMeta[k]);
+        });
+      }
+
+      // 2d) Aviation tiers
+      if (Array.isArray(data.aviationTiers) && data.aviationTiers.length){
+        aviationTiers = data.aviationTiers;
+      }
+
+      // 2e) Refresh UI with new catalog & data
+      populateCategoryFilter();
+      buildPricingRows();
+      document.querySelectorAll('#costItems tr').forEach(updateRowTotal);
+      calculateTotal();
+      showToast("✔ Pricing imported");
+    }catch(err){
+      alert("Invalid JSON file.");
     }
+  };
+  reader.readAsText(file);
+}
+
+
+/* ===== Add New Item Modal ===== */
+const addModalBg = document.getElementById('addModalBg');
+const addCat = document.getElementById('addCat');
+const addSub = document.getElementById('addSub');
+const addName = document.getElementById('addName');
+const addPrice = document.getElementById('addPrice');
+const addMeasure = document.getElementById('addMeasure');
+const addError = document.getElementById('addError');
+
+function openAddModal(){
+  addCat.innerHTML = Object.keys(catalog).map(c=>`<option>${c}</option>`).join('');
+  addMeasure.innerHTML = MEASURE_OPTIONS.map(o=>`<option value="${o.val}">${o.label}</option>`).join('');
+  addMeasure.value = 'per_student';
+
+  addName.value=''; addPrice.value='0';
+  addError.style.display='none';
+  rebuildAddSub();
+
+  addModalBg.style.display='flex';
+  addModalBg.setAttribute('aria-hidden','false');
+}
+function closeAddModal(){
+  addModalBg.style.display='none';
+  addModalBg.setAttribute('aria-hidden','true');
+}
+function rebuildAddSub(){
+  const cat = addCat.value;
+  const subs = subcategoryList(cat) || [];
+  if (!subs.length){
+    addSub.innerHTML = `<option value="-" selected>—</option>`;
+    addSub.disabled = true;
+  }else{
+    addSub.disabled = false;
+    addSub.innerHTML = `<option value="">Select Subcategory</option>` + subs.map(s=>`<option>${s}</option>`).join('');
+  }
+}
+function addNewItem(){
+  const cat = addCat.value;
+  let sub = addSub.disabled ? '-' : (addSub.value || '');
+  const name = (addName.value||'').trim();
+  const price = parseFloat(addPrice.value||'0')||0;
+  const measure = addMeasure.value;
+
+  if (!cat){ return showAddError("Please choose a category."); }
+  if (!sub){ return showAddError("Please choose a subcategory."); }
+  if (!name){ return showAddError("Please enter an item name."); }
+
+  const currentList = (catalog[cat] && catalog[cat][sub]) ? catalog[cat][sub] : [];
+  if (currentList.includes(name)){
+    return showAddError("Item already exists in this category/subcategory.");
+  }
+
+  if (!catalog[cat][sub]) catalog[cat][sub] = [];
+  catalog[cat][sub].push(name);
+
+  defaultPrices[name] = price;
+  const label = (MEASURE_OPTIONS.find(o=>o.val===measure)?.label)||'—';
+  itemMeta[name] = { unit: measure, measure: label };
+
+  buildPricingRows();
+populateCategoryFilter();
+showToast("✔ Item added");
+closeAddModal();
+
+}
+
+function showAddError(msg){
+  addError.textContent = msg;
+  addError.style.display='block';
+}
+
+/* ===== Aviation Tiers Modal ===== */
+const aviModalBg = document.getElementById('aviModalBg');
+const aviTierBody = document.getElementById('aviTierBody');
+const aviBase = document.getElementById('aviBase');
+const aviExtraPer = document.getElementById('aviExtraPer');
+const aviExtraStart = document.getElementById('aviExtraStart');
+const aviErr = document.getElementById('aviErr');
+
+function openAviModal(){
+  aviTierBody.innerHTML = '';
+  const fixed = aviationTiers.filter(t=>t.max !== Infinity);
+  fixed.forEach((t, idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="number" min="1" step="1" value="${t.min}"></td>
+      <td><input type="number" min="1" step="1" value="${t.max}"></td>
+      <td><input type="number" min="0" step="1" value="${t.price}"></td>
+    `;
+    aviTierBody.appendChild(tr);
   });
 
-})();
+  const last = aviationTiers[aviationTiers.length-1] || {};
+  aviBase.value = last.base ?? 7300;
+  aviExtraPer.value = last.extraPer ?? 230;
+  aviExtraStart.value = last.extraStart ?? 35;
+
+  aviErr.style.display='none';
+  aviModalBg.style.display='flex';
+  aviModalBg.setAttribute('aria-hidden','false');
+}
+function closeAviModal(){
+  aviModalBg.style.display='none';
+  aviModalBg.setAttribute('aria-hidden','true');
+}
+function saveAviationTiers(){
+  const rows = [...aviTierBody.querySelectorAll('tr')];
+  const bands = rows.map(r=>{
+    const [minEl, maxEl, priceEl] = r.querySelectorAll('input');
+    return {
+      min: Number(minEl.value||0),
+      max: Number(maxEl.value||0),
+      price: Number(priceEl.value||0)
+    };
+  }).sort((a,b)=>a.min-b.min);
+
+  for (let i=0;i<bands.length;i++){
+    const b = bands[i];
+    if (!(b.min>=1 && b.max>=b.min && b.price>=0)){
+      return showAviError("Please ensure min/max/price are valid numbers (max ≥ min, price ≥ 0).");
+    }
+    if (i>0 && b.min <= bands[i-1].max){
+      return showAviError("Tiers overlap. Each tier's min must be greater than the previous tier's max.");
+    }
+  }
+
+  const base = Number(aviBase.value||0);
+  const extraPer = Number(aviExtraPer.value||0);
+  const extraStart = Number(aviExtraStart.value||0);
+  if (base<0 || extraPer<0 || extraStart<0){
+    return showAviError("Overflow values must be ≥ 0.");
+  }
+
+  aviationTiers = [
+    ...bands,
+    { min: (bands[bands.length-1]?.max||35)+1, max: Infinity, base, extraPer, extraStart }
+  ];
+
+  closeAviModal();
+  showToast("✔ Aviation tiers updated");
+  document.querySelectorAll('#costItems tr').forEach(updateRowTotal);
+  calculateTotal();
+}
+function showAviError(msg){
+  aviErr.textContent = msg;
+  aviErr.style.display='block';
+}
+
+/* ===== View Navigation ===== */
+function showPricingManager(){
+  $('#calculatorView').style.display='none';
+  $('#pricingManagerView').style.display='block';
+  $('#toPricing').style.display='none';
+  $('#toCalc').style.display='inline-block';
+  populateCategoryFilter();
+  buildPricingRows();
+}
+function showCalculator(){
+  $('#pricingManagerView').style.display='none';
+  $('#calculatorView').style.display='block';
+  $('#toPricing').style.display='inline-block';
+  $('#toCalc').style.display='none';
+}
+
+/* ===== Wire-up ===== */
+document.getElementById('addRowBtn').addEventListener('click', ()=> addRow());
+document.getElementById('csvBtn').addEventListener('click', exportCSV);
+
+['numStudents','weeks','profitMargin','agentCommission'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{
+    syncAutoQtyRows();
+    calculateTotal();
+  });
+});
+
+// top buttons
+document.getElementById('toPricing').addEventListener('click', showPricingManager);
+document.getElementById('toCalc').addEventListener('click', showCalculator);
+document.getElementById('toCalcBottom').addEventListener('click', showCalculator);
+
+// Pricing Manager events
+document.getElementById('pmCategoryFilter').addEventListener('change', buildPricingRows);
+document.getElementById('pmSearch').addEventListener('input', buildPricingRows);
+document.getElementById('pmExport').addEventListener('click', exportPricingJSON);
+document.getElementById('pmImport').addEventListener('change', (e)=>{
+  if (e.target.files && e.target.files[0]) importPricingJSON(e.target.files[0]);
+});
+document.getElementById('pmAddBtn').addEventListener('click', openAddModal);
+
+// Add Item modal events
+document.getElementById('addClose').addEventListener('click', closeAddModal);
+document.getElementById('addCancel').addEventListener('click', closeAddModal);
+addCat.addEventListener('change', rebuildAddSub);
+document.getElementById('addSave').addEventListener('click', addNewItem);
+
+// Aviation modal events
+document.getElementById('pmAviBtn').addEventListener('click', openAviModal);
+document.getElementById('aviClose').addEventListener('click', closeAviModal);
+document.getElementById('aviCancel').addEventListener('click', closeAviModal);
+document.getElementById('aviSave').addEventListener('click', saveAviationTiers);
+
+// Init
+calculateTotal();
 </script>
-
-<!-- Paste the rest of your original JS here (the large block from the uploaded file).
-     In the sample above I placed the lock logic after original initialization.
-     Make sure the calculateTotal(); init call from your original file remains. -->
-
-</body>
-</html>
