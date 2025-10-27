@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>STUDY TOUR — Cost Calculator (Jacky 8.6)</title>
+<title>STUDY TOUR — Cost Calculator (Jacky 8.7)</title>
 <style>
 :root{
   --bg:#f6f7fb; --card:#fff; --brand:#5b46c6; --ink:#1f2340; --muted:#8287a1; --line:#e8eaf6;
@@ -110,7 +110,7 @@ td.remove{width:48px;text-align:center}
 
     <div class="topbar">
       <div class="left">
-        <h1 style="border:0;padding:0;margin:0;">STUDY TOUR — Cost Calculator <span class="badge">Jacky 8.6</span></h1>
+        <h1 style="border:0;padding:0;margin:0;">STUDY TOUR — Cost Calculator <span class="badge">Jacky 8.7</span></h1>
       </div>
       <div class="right">
         <button id="toPricing" class="ghost">⚙ Edit Pricing</button>
@@ -943,11 +943,81 @@ function populateCategoryFilter(){
   const sel = $('#pmCategoryFilter');
   sel.innerHTML = `<option value="">All Categories</option>` + Object.keys(catalog).map(c=>`<option>${c}</option>`).join('');
 }
+/* -------------------------------
+   🔸 LocalStorage Auto-Save System
+   ------------------------------- */
+
+// Auto-save whenever pricing or tiers change
+function autoSaveLocal() {
+  try {
+    const payload = {
+      version: "jacky-8.7-local",
+      catalog,
+      defaultPrices,
+      itemMeta,
+      aviationTiers
+    };
+    localStorage.setItem("studyTourPricing", JSON.stringify(payload));
+    console.log("✅ Auto-saved pricing to LocalStorage");
+  } catch (err) {
+    console.error("❌ Local save failed:", err);
+  }
+}
+
+// Load saved pricing if available
+function loadLocalSave() {
+  try {
+    const data = localStorage.getItem("studyTourPricing");
+    if (data) {
+      const parsed = JSON.parse(data);
+
+      if (parsed.catalog) Object.assign(catalog, parsed.catalog);
+      if (parsed.defaultPrices) Object.assign(defaultPrices, parsed.defaultPrices);
+      if (parsed.itemMeta) Object.assign(itemMeta, parsed.itemMeta);
+      if (parsed.aviationTiers) Object.assign(aviationTiers, parsed.aviationTiers);
+
+      console.log("✅ Loaded saved pricing from LocalStorage");
+      showToast("Loaded saved pricing from LocalStorage ✔");
+    } else {
+      console.log("ℹ️ No LocalStorage save found — using default data");
+    }
+  } catch (err) {
+    console.error("❌ Load LocalStorage failed:", err);
+  }
+}
+
+// ------------------------------
+// Hook auto-save into the events
+// ------------------------------
+function enableLocalAutoSave() {
+  // 1️⃣ Save when pricing manager edits
+  document.getElementById("pmTable")?.addEventListener("input", () => {
+    autoSaveLocal();
+  });
+
+  // 2️⃣ Save when aviation tiers update
+  document.getElementById("aviSave")?.addEventListener("click", () => {
+    autoSaveLocal();
+  });
+
+  // 3️⃣ Save when new item is added
+  document.getElementById("addSave")?.addEventListener("click", () => {
+    setTimeout(autoSaveLocal, 500);
+  });
+}
+
+// ---------------
+// Initialization
+// ---------------
+window.addEventListener("DOMContentLoaded", () => {
+  loadLocalSave();
+  enableLocalAutoSave();
+});
 
 /* Export current pricing JSON (now includes aviationTiers) */
 function exportPricingJSON(){
   const payload = {
-    version: "jacky-8.6",
+    version: "jacky-8.7",
     catalog,               // ← include the latest category/subcategory → items
     defaultPrices,
     itemMeta,
