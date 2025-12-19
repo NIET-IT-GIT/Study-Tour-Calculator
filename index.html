@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>STUDY TOUR — Cost Calculator (Jacky 8.7)</title>
+<title>STUDY TOUR — Cost Calculator (Jacky 8.9)</title>
 <style>
 :root{
   --bg:#f6f7fb; --card:#fff; --brand:#5b46c6; --ink:#1f2340; --muted:#8287a1; --line:#e8eaf6;
@@ -110,7 +110,7 @@ td.remove{width:48px;text-align:center}
 
     <div class="topbar">
       <div class="left">
-        <h1 style="border:0;padding:0;margin:0;">STUDY TOUR — Cost Calculator <span class="badge">Jacky 8.7</span></h1>
+        <h1 style="border:0;padding:0;margin:0;">STUDY TOUR — Cost Calculator <span class="badge">Jacky 8.9</span></h1>
       </div>
       <div class="right">
         <button id="toPricing" class="ghost">⚙ Edit Pricing</button>
@@ -325,6 +325,7 @@ td.remove{width:48px;text-align:center}
     </footer>
   </div>
 </div>
+<div id="toast" class="toast" aria-live="polite"></div>
 
 <script>
 
@@ -400,6 +401,55 @@ const catalog = {
       "Other Activities"
     ]
   },
+  "Point-to-Point Transportation": {
+  "City to Local address (<25km)": [
+    "ONE WAY - Single Pax",
+    "ONE WAY - 10 seat mini bus",
+    "ONE WAY - 21/24 seat mini bus",
+    "ONE WAY - 39 seat midi coach",
+    "ONE WAY - 57 seat coach",
+    "ONE WAY - 61 seat coach",
+
+    "RETURN - Single Pax",
+    "RETURN - 10 seat mini bus",
+    "RETURN - 21/24 seat mini bus",
+    "RETURN - 39 seat midi coach",
+    "RETURN - 57 seat coach",
+    "RETURN - 61 seat coach"
+  ],
+
+  "City to Griffith Logan": [
+    "ONE WAY - Single Pax",
+    "ONE WAY - 10 seat mini bus",
+    "ONE WAY - 21/24 seat mini bus",
+    "ONE WAY - 39 seat midi coach",
+    "ONE WAY - 57 seat coach",
+    "ONE WAY - 61 seat coach",
+
+    "RETURN - Single Pax",
+    "RETURN - 10 seat mini bus",
+    "RETURN - 21/24 seat mini bus",
+    "RETURN - 39 seat midi coach",
+    "RETURN - 57 seat coach",
+    "RETURN - 61 seat coach"
+  ],
+
+  "City to Southport": [
+    "ONE WAY - Single Pax",
+    "ONE WAY - 10 seat mini bus",
+    "ONE WAY - 21/24 seat mini bus",
+    "ONE WAY - 39 seat midi coach",
+    "ONE WAY - 57 seat coach",
+    "ONE WAY - 61 seat coach",
+
+    "RETURN - Single Pax",
+    "RETURN - 10 seat mini bus",
+    "RETURN - 21/24 seat mini bus",
+    "RETURN - 39 seat midi coach",
+    "RETURN - 57 seat coach",
+    "RETURN - 61 seat coach"
+  ]
+  },
   "Transport": {
     "Airport Transfer": [
       "BNE Airport to City, or return - Single Pax",
@@ -436,9 +486,12 @@ const catalog = {
       "Australia Zoo - 39 seat midi coach",
       "Australia Zoo - 57 seat coach",
       "Australia Zoo - 61 seat coach"
-    ]
-  }
-};
+    ],
+    
+}
+
+
+  };
 
 /* Measurement Logic */
 const itemMeta = {
@@ -520,7 +573,38 @@ const itemMeta = {
   "Australia Zoo - 21/24 seat mini bus": { unit:"per_bus", measure:"per trip" },
   "Australia Zoo - 39 seat midi coach": { unit:"per_bus", measure:"per trip" },
   "Australia Zoo - 57 seat coach": { unit:"per_bus", measure:"per trip" },
-  "Australia Zoo - 61 seat coach": { unit:"per_bus", measure:"per trip" }
+  "Australia Zoo - 61 seat coach": { unit:"per_bus", measure:"per trip" },
+
+ /* ===============================
+   Point-to-Point Measurements
+================================ */
+
+"City to Local address (<25km) - ONE WAY - Single Pax": { unit:"per_trip", measure:"per trip" },
+"City to Local address (<25km) - RETURN - Single Pax": { unit:"per_trip", measure:"per return trip" },
+
+"City to Griffith Logan - ONE WAY - Single Pax": { unit:"per_trip", measure:"per trip" },
+"City to Griffith Logan - RETURN - Single Pax": { unit:"per_trip", measure:"per return trip" },
+
+"City to Southport - ONE WAY - Single Pax": { unit:"per_trip", measure:"per trip" },
+"City to Southport - RETURN - Single Pax": { unit:"per_trip", measure:"per return trip" },
+
+// All buses & coaches
+"City to Local address (<25km) - ONE WAY - 10 seat mini bus": { unit:"per_bus", measure:"per trip" },
+"City to Local address (<25km) - RETURN - 10 seat mini bus": { unit:"per_bus", measure:"per return trip" },
+"City to Local address (<25km) - ONE WAY - 21/24 seat mini bus": { unit:"per_bus", measure:"per trip" },
+"City to Local address (<25km) - RETURN - 21/24 seat mini bus": { unit:"per_bus", measure:"per return trip" },
+"City to Local address (<25km) - ONE WAY - 39 seat midi coach": { unit:"per_bus", measure:"per trip" },
+"City to Local address (<25km) - RETURN - 39 seat midi coach": { unit:"per_bus", measure:"per return trip" },
+"City to Local address (<25km) - ONE WAY - 57 seat coach": { unit:"per_bus", measure:"per trip" },
+"City to Local address (<25km) - RETURN - 57 seat coach": { unit:"per_bus", measure:"per return trip" },
+"City to Local address (<25km) - ONE WAY - 61 seat coach": { unit:"per_bus", measure:"per trip" },
+"City to Local address (<25km) - RETURN - 61 seat coach": { unit:"per_bus", measure:"per return trip" },
+
+// Repeat same unit/measure pattern for Griffith & Southport buses
+
+  
+
+  
 };
 
 /* Default Prices */
@@ -603,7 +687,62 @@ const defaultPrices = {
   "Australia Zoo - 21/24 seat mini bus": 1100,
   "Australia Zoo - 39 seat midi coach": 1210,
   "Australia Zoo - 57 seat coach": 1320,
-  "Australia Zoo - 61 seat coach": 1430
+  "Australia Zoo - 61 seat coach": 1430,
+
+ /* ===============================
+   Point-to-Point Transportation
+   (Echo Jiang confirmed pricing)
+================================ */
+
+/* ===============================
+   Point-to-Point Transportation
+   (Echo Jiang confirmed pricing)
+================================ */
+
+// City to Local address (<25km)
+"City to Local address (<25km) - ONE WAY - Single Pax": 132,
+"City to Local address (<25km) - ONE WAY - 10 seat mini bus": 220,
+"City to Local address (<25km) - ONE WAY - 21/24 seat mini bus": 297,
+"City to Local address (<25km) - ONE WAY - 39 seat midi coach": 341,
+"City to Local address (<25km) - ONE WAY - 57 seat coach": 385,
+"City to Local address (<25km) - ONE WAY - 61 seat coach": 407,
+
+"City to Local address (<25km) - RETURN - Single Pax": 220,
+"City to Local address (<25km) - RETURN - 10 seat mini bus": 410,
+"City to Local address (<25km) - RETURN - 21/24 seat mini bus": 550,
+"City to Local address (<25km) - RETURN - 39 seat midi coach": 605,
+"City to Local address (<25km) - RETURN - 57 seat coach": 660,
+"City to Local address (<25km) - RETURN - 61 seat coach": 671,
+
+// City to Griffith Logan
+"City to Griffith Logan - ONE WAY - Single Pax": 145,
+"City to Griffith Logan - ONE WAY - 10 seat mini bus": 231,
+"City to Griffith Logan - ONE WAY - 21/24 seat mini bus": 308,
+"City to Griffith Logan - ONE WAY - 39 seat midi coach": 352,
+"City to Griffith Logan - ONE WAY - 57 seat coach": 396,
+"City to Griffith Logan - ONE WAY - 61 seat coach": 418,
+
+"City to Griffith Logan - RETURN - Single Pax": 260,
+"City to Griffith Logan - RETURN - 10 seat mini bus": 440,
+"City to Griffith Logan - RETURN - 21/24 seat mini bus": 594,
+"City to Griffith Logan - RETURN - 39 seat midi coach": 660,
+"City to Griffith Logan - RETURN - 57 seat coach": 770,
+"City to Griffith Logan - RETURN - 61 seat coach": 792,
+
+// City to Southport
+"City to Southport - ONE WAY - Single Pax": 297,
+"City to Southport - ONE WAY - 10 seat mini bus": 396,
+"City to Southport - ONE WAY - 21/24 seat mini bus": 484,
+"City to Southport - ONE WAY - 39 seat midi coach": 550,
+"City to Southport - ONE WAY - 57 seat coach": 605,
+"City to Southport - ONE WAY - 61 seat coach": 660,
+
+"City to Southport - RETURN - Single Pax": 550,
+"City to Southport - RETURN - 10 seat mini bus": 660,
+"City to Southport - RETURN - 21/24 seat mini bus": 770,
+"City to Southport - RETURN - 39 seat midi coach": 880,
+"City to Southport - RETURN - 57 seat coach": 990,
+"City to Southport - RETURN - 61 seat coach": 1100,
 };
 
 /* ===== Editable Aviation Tiers =====
@@ -639,7 +778,16 @@ function aviationPriceByStudents(n){
 /* ============ Helpers ============ */
 const $ = s => document.querySelector(s);
 function money(n){ return `$${(Number(n)||0).toFixed(2)}`; }
+ function getPricingKey(tr) {
+  const cat  = tr.querySelector('.cat select')?.value || '';
+  const sub  = tr.querySelector('.sub select')?.value || '';
+  const item = tr.querySelector('.item select')?.value || '';
 
+  if (cat === "Point-to-Point Transportation" && sub && item) {
+    return `${sub} - ${item}`;
+  }
+  return item;
+}
 function makeSelect(options, placeholder="Select"){
   const s=document.createElement('select');
   s.innerHTML = `<option value="">${placeholder}</option>` + options.map(v=>`<option>${v}</option>`).join('');
@@ -656,6 +804,44 @@ function itemList(cat, sub){
   if (sub && Array.isArray(branch[sub])) return branch[sub];
   if (!sub && branch["-"]) return branch["-"];
   return branch[sub] || [];
+}
+function onItemChange(e) {
+  let tr = null;
+
+  // when triggered by change event
+  if (e && e.target) {
+    tr = e.target.closest('tr');
+  }
+
+  // fallback (when called manually)
+  if (!tr) {
+    tr = document.querySelector('#costItems tr:last-child');
+  }
+
+  if (!tr) return;
+
+  const itemSel = tr.querySelector('.item select');
+  const unit = tr.querySelector('.unit input');
+  const meas = tr.querySelector('.meas');
+
+  const cat = tr.querySelector('.cat select')?.value || '';
+  const sub = tr.querySelector('.sub select')?.value || '';
+  const name = itemSel.value;
+
+  let key = name;
+
+  // ✅ Point-to-Point composite pricing
+  if (cat === "Point-to-Point Transportation" && sub) {
+    key = `${sub} - ${name}`;
+  }
+
+  unit.value = defaultPrices[key] ?? 0;
+
+  const meta = itemMeta[key] || itemMeta[name] || {};
+  meas.textContent = meta.measure || '—';
+
+  updateRowTotal(tr);
+  calculateTotal();
 }
 
 /* ============ Calculator Row Builder ============ */
@@ -701,20 +887,13 @@ function addRow(){
     s.innerHTML = `<option value="">Select Item</option>` + items.map(n=>`<option>${n}</option>`).join('');
     itemSel.replaceWith(s); itemSel=s;
     itemSel.addEventListener('change', onItemChange);
-    onItemChange();
+    onItemChange({ target: itemSel });
   }
-  function onItemChange(){
-    const name=itemSel.value;
-    const meta=itemMeta[name]||{};
-    meas.textContent = meta.measure || '—';
-    if (defaultPrices[name]!==undefined) unit.value = defaultPrices[name];
-    if (qty.dataset.override!=='1') setDefaultQty(name);
-    updateRowTotal(tr); calculateTotal();
-  }
+
   function setDefaultQty(name){
     const students = parseInt($('#numStudents').value||'0',10)||0;
     const weeks = Math.max(1, parseInt($('#weeks').value||'1',10)||1);
-    const meta = itemMeta[name]||{};
+    const meta = itemMeta[getPricingKey(tr)] || itemMeta[name] || {};
     if (name==="Aviation Class"){ qty.value=1; return; }
     if (meta.cookery){ qty.value=students+1; return; }
     if (meta.unit==="per_bus"){ qty.value=1; return; }
@@ -728,47 +907,175 @@ function addRow(){
   unit.addEventListener('input', ()=>{ updateRowTotal(tr); calculateTotal(); });
 
   $('#costItems').appendChild(tr);
-  return tr;
-}
+  return tr;}
+
+
+
+
 
 /* ============ Totals & Profit ============ */
 const DAYS_PER_WEEK = 5;
 // Profit excludes Application Fee, Learning Materials, Accommodation
 const profitExclude = new Set(["Application Fee","Learning Materials","Accommodation"]);
+/* ------------------------------------------------------------
+   HOMESTAY PRICE ENGINE (Jacky 8.9)
+   Paste ABOVE updateRowTotal()
+-------------------------------------------------------------*/
 
-function updateRowTotal(tr){
-  const item = tr.querySelector('td.item select')?.value || '';
-  const qty  = parseFloat(tr.querySelector('td.qty input')?.value || '0') || 0;
-  const unit = parseFloat(tr.querySelector('td.unit input')?.value || '0') || 0;
+// Echo’s homestay pricing table (EDIT VALUES as needed)
+const homestayMatrix = {
+  1: {   // 1 week
+    twin:   { weekly: 400, pickupDrop: 125 },
+    single: { weekly: 450, pickupDrop: 125 },
+  },
+  2: {   // 2 weeks
+    twin:   { weekly: 400, pickupDrop: 125 },
+    single: { weekly: 450, pickupDrop: 125 },
+  },
+  3: {   // 3 weeks
+    twin:   { weekly: 400, pickupDrop: 125 },
+    single: { weekly: 450, pickupDrop: 125 },
+  },
+  // ⭐ Add more weeks if Echo’s table includes them
+};
 
-  const students = parseInt($('#numStudents').value||'0',10)||0;
-  const weeks = Math.max(1, parseInt($('#weeks').value||'1',10)||1);
+// Helper → safely returns weekly & pickup rates
+function getHomestayRates(weeks, type) {
+  const w = homestayMatrix[weeks] || homestayMatrix[1]; // fallback to 1 week
+  const t = w[type] || w["twin"];                       // fallback to twin
 
-  let total = 0;
-  const unitType = itemMeta[item]?.unit || '';
+  return {
+    weekly: t.weekly || 0,
+    pickupDrop: t.pickupDrop || 0
+  };
+ 
+}
 
-  if (item==="Aviation Class"){
-    const group = aviationPriceByStudents(students);
-    tr.querySelector('td.unit input').value = group.toFixed(2);
-    tr.querySelector('td.qty input').value = 1;
-    total = group;
-  } else {
-    let q = qty;
-    switch(unitType){
-      case 'per_student':       break; // qty = students or manual
-      case 'per_student_once':  break; // once
-      case 'per_student_week':  q = qty * weeks; break;
-      case 'per_student_day':   q = qty * (weeks * DAYS_PER_WEEK); break;
-      case 'per_week':          q = qty; break;
-      case 'per_hour':          q = qty; break;
-      case 'per_bus':           q = qty; break;
-      default:                  q = qty;
-    }
-    total = q * unit;
+/* ----------------------------------------------------------------
+   HOMESTAY AUTO-LOGIC (special handling for Accommodation rows)
+   This block is used INSIDE updateRowTotal()
+------------------------------------------------------------------*/
+function applyHomestayLogic(tr, cat, item) {
+  if (cat !== "Accommodation") return null;
+
+  const weeks = parseFloat(document.getElementById("weeks").value || 1);
+  const students = parseFloat(document.getElementById("numStudents").value || 0);
+
+  // Map item → homestay type
+  let type = null;
+  if (item === "Homestay Twin") type = "twin";
+  if (item === "Homestay Single") type = "single";
+
+  // Handle Homestay Twin/Single
+  if (type) {
+    const { weekly } = getHomestayRates(weeks, type);
+
+    const perStudent = weekly * weeks;
+    const total = perStudent * students;
+
+    // Write into the row
+    tr.querySelector(".qty input").value = students;
+    tr.querySelector(".unit input").value = perStudent.toFixed(2);
+
+    return total;
   }
-  tr.querySelector('td.total').textContent = money(total);
+
+  // Handle Pick-up & drop-off service (separate item)
+  if (item === "Pick-up & drop-off service") {
+    const { pickupDrop } = getHomestayRates(weeks, "twin"); // same for both room types
+
+    const perStudent = pickupDrop * weeks;
+    const total = perStudent * students;
+
+    tr.querySelector(".qty input").value = students;
+    tr.querySelector(".unit input").value = perStudent.toFixed(2);
+
+    return total;
+  }
+
+  return null; // not a homestay item
+}
+function updateRowTotal(tr) {
+  const cat  = tr.querySelector('.cat select')?.value || '';
+  const item = tr.querySelector('.item select')?.value || '';
+  const qtyEl = tr.querySelector('td.qty input');
+  const unitEl = tr.querySelector('td.unit input');
+  const totalEl = tr.querySelector('td.total');
+
+  const students = parseInt(document.getElementById('numStudents').value || 0, 10) || 0;
+  const weeks = Math.max(1, parseInt(document.getElementById('weeks').value || 1, 10) || 1);
+
+  /* ------------------------------------------------
+     🔹 STEP 1 — Special HOMESTAY ENGINE
+  -------------------------------------------------- */
+  const homestayTotal = applyHomestayLogic(tr, cat, item);
+  if (homestayTotal !== null) {
+      totalEl.textContent = money(homestayTotal);
+      return homestayTotal;
+  }
+
+  /* ------------------------------------------------
+     🔹 STEP 2 — Normal item × qty × unit logic
+  -------------------------------------------------- */
+  let qty = parseFloat(qtyEl.value || '0') || 0;
+  let unit = parseFloat(unitEl.value || '0') || 0;
+  const key =
+  cat === "Point-to-Point Transportation" && tr.querySelector('.sub select')?.value
+    ? `${tr.querySelector('.sub select').value} - ${item}`
+    : item;
+// ✅ Ensure correct unit price for Point-to-Point
+if (defaultPrices[key] !== undefined) {
+  unitEl.value = defaultPrices[key];
+}
+
+const unitType = itemMeta[key]?.unit || itemMeta[item]?.unit || '';
+
+
+  // Tiered Aviation — overwrite qty & unit
+  if (item === "Aviation Class") {
+    const groupPrice = aviationPriceByStudents(students);
+    qtyEl.value = 1;
+    unitEl.value = groupPrice.toFixed(2);
+    totalEl.textContent = money(groupPrice);
+    return groupPrice;
+  }
+
+  // Adjust quantity based on measurement logic
+  switch(unitType) {
+    case 'per_student':
+      qty = students;
+      break;
+
+    case 'per_student_once':
+      qty = students;
+      break;
+
+    case 'per_student_week':
+      qty = students * weeks;
+      break;
+
+    case 'per_student_day':
+      qty = students * weeks * 5; // school days
+      break;
+
+    case 'per_week':
+      qty = weeks;
+      break;
+
+    case 'per_hour':
+      // use manual qtyEl
+      break;
+
+    case 'per_bus':
+      // qtyEl stays manual (usually 1)
+      break;
+  }
+
+  const total = qty * unit;
+  totalEl.textContent = money(total);
   return total;
 }
+
 
 function calculateTotal(){
   let base = 0, profitBase = 0;
@@ -805,7 +1112,7 @@ function syncAutoQtyRows(){
   const weeks = Math.max(1, parseInt($('#weeks').value||'1',10)||1);
   document.querySelectorAll('#costItems tr').forEach(tr=>{
     const item = tr.querySelector('td.item select')?.value || '';
-    const meta = itemMeta[item]||{};
+   const meta = itemMeta[getPricingKey(tr)] || itemMeta[item] || {};
     const qtyEl = tr.querySelector('td.qty input');
     if (!qtyEl || qtyEl.dataset.override==='1') return;
     if (item==="Aviation Class") qtyEl.value=1;
@@ -885,12 +1192,14 @@ function showToast(msg="✔ Pricing updated"){
 }
 
 function buildPricingRows(){
+  // 🚫 Do not allow Pricing Manager to overwrite Point-to-Point prices
+
   const tbody = $('#pmTable tbody'); tbody.innerHTML='';
   const filterCat = $('#pmCategoryFilter').value || '';
   const q = ($('#pmSearch').value||'').toLowerCase();
 
-  Object.keys(catalog).forEach(cat=>{
-    if (filterCat && cat!==filterCat) return;
+ Object.keys(catalog).forEach(cat=>{
+  if (cat === "Point-to-Point Transportation") return;
     const subcats = catalog[cat];
     Object.keys(subcats).forEach(sub=>{
       const items = subcats[sub];
@@ -951,7 +1260,7 @@ function populateCategoryFilter(){
 function autoSaveLocal() {
   try {
     const payload = {
-      version: "jacky-8.7-local",
+      version: "jacky-8.9-local",
       catalog,
       defaultPrices,
       itemMeta,
@@ -1010,14 +1319,17 @@ function enableLocalAutoSave() {
 // Initialization
 // ---------------
 window.addEventListener("DOMContentLoaded", () => {
-  loadLocalSave();
+  loadLocalSave();      // ✅ re-enabled
   enableLocalAutoSave();
 });
+
+
+
 
 /* Export current pricing JSON (now includes aviationTiers) */
 function exportPricingJSON(){
   const payload = {
-    version: "jacky-8.7",
+    version: "jacky-8.9",
     catalog,               // ← include the latest category/subcategory → items
     defaultPrices,
     itemMeta,
